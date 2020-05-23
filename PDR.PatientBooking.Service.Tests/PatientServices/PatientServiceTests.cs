@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using AutoFixture;
 using FluentAssertions;
@@ -92,6 +93,8 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
         {
             //arrange
             var request = _fixture.Create<AddPatientRequest>();
+            request.Email = _fixture.Create<MailAddress>().Address;//generate valid email address
+            request.Created = DateTime.Now; //set created datetime once
 
             var expected = new Patient
             {
@@ -102,7 +105,7 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
                 ClinicId = request.ClinicId,
-                Created = DateTime.UtcNow
+                Created = request.Created
             };
 
             //act
