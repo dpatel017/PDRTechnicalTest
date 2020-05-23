@@ -1,7 +1,9 @@
 ﻿using PDR.PatientBooking.Data;
 using PDR.PatientBooking.Service.PatientServices.Requests;
 using PDR.PatientBooking.Service.Validation;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace PDR.PatientBooking.Service.PatientServices.Validation
@@ -21,7 +23,8 @@ namespace PDR.PatientBooking.Service.PatientServices.Validation
 
             if (MissingRequiredFields(request, ref result))
                 return result;
-
+            if (InvalidEmailAddress(request, ref result)) //Added valid email check
+                return result;
             if (PatientAlreadyInDb(request, ref result))
                 return result;
 
@@ -72,6 +75,19 @@ namespace PDR.PatientBooking.Service.PatientServices.Validation
             {
                 result.PassedValidation = false;
                 result.Errors.Add("A clinic with that ID could not be found");
+                return true;
+            }
+
+            return false;
+        }
+
+        //Added valid email check function
+        private Boolean InvalidEmailAddress(AddPatientRequest request, ref PdrValidationResult result)
+        {
+            if (!(new EmailAddressAttribute().IsValid(request.Email)))
+            {
+                result.PassedValidation = false;
+                result.Errors.Add("Email must be a valid email address");
                 return true;
             }
 

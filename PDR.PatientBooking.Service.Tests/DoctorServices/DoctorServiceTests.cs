@@ -14,6 +14,7 @@ using PDR.PatientBooking.Service.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 
 namespace PDR.PatientBooking.Service.Tests.DoctorServices
 {
@@ -91,6 +92,8 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
         {
             //arrange
             var request = _fixture.Create<AddDoctorRequest>();
+            request.Email = _fixture.Create<MailAddress>().Address; //generate valid email address
+            request.Created = DateTime.Now; //set created datetime once
 
             var expected = new Doctor
             {
@@ -100,7 +103,7 @@ namespace PDR.PatientBooking.Service.Tests.DoctorServices
                 Email = request.Email,
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
-                Created = DateTime.UtcNow
+                Created = request.Created
             };
 
             //act

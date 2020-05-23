@@ -11,5 +11,6 @@ namespace PDR.PatientBooking.Service.PatientServices.Requests
         public Gender Gender { get; set; }
         public string Email { get; set; }
         public long ClinicId { get; set; }
+        public DateTime Created { get; set; }
     }
 }

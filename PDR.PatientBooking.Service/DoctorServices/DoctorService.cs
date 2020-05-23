@@ -39,7 +39,7 @@ namespace PDR.PatientBooking.Service.DoctorServices
                 Email = request.Email,
                 DateOfBirth = request.DateOfBirth,
                 Orders = new List<Order>(),
-                Created = DateTime.UtcNow
+                Created = request.Created
             });
 
             _context.SaveChanges();

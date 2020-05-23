@@ -1,7 +1,9 @@
 ﻿using PDR.PatientBooking.Data;
 using PDR.PatientBooking.Service.DoctorServices.Requests;
 using PDR.PatientBooking.Service.Validation;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace PDR.PatientBooking.Service.DoctorServices.Validation
@@ -20,6 +22,9 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
             var result = new PdrValidationResult(true);
 
             if (MissingRequiredFields(request, ref result))
+                return result;
+            
+            if (InvalidEmailAddress(request, ref result))//Added check for valid email aqddress
                 return result;
 
             if (DoctorAlreadyInDb(request, ref result))
@@ -57,6 +62,19 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
             {
                 result.PassedValidation = false;
                 result.Errors.Add("A doctor with that email address already exists");
+                return true;
+            }
+
+            return false;
+        }
+
+        //Added valid email check function
+        private bool InvalidEmailAddress(AddDoctorRequest request, ref PdrValidationResult result)
+        {
+            if (!(new EmailAddressAttribute().IsValid(request.Email)))
+            {
+                result.PassedValidation = false;
+                result.Errors.Add("Email must be a valid email address");
                 return true;
             }
 
