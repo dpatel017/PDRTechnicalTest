@@ -15,12 +15,15 @@ namespace PDR.PatientBooking.Service.BookingServices
     {
         private readonly PatientBookingContext _context;
         private readonly IAddBookingRequestValidator _validator;
+        private readonly ICancelBookingRequestValidator _cancelValidator;
 
         public BookingService(PatientBookingContext context, 
-                                IAddBookingRequestValidator validator)
+                                IAddBookingRequestValidator validator,
+                                ICancelBookingRequestValidator cancelValidator)
         {
             _context = context;
             _validator = validator;
+            _cancelValidator = cancelValidator;
         }
 
         public void AddBooking(AddBookingRequest request)
@@ -52,6 +55,28 @@ namespace PDR.PatientBooking.Service.BookingServices
 
         }
 
+        public void CancelBooking(Guid id)
+        {
+            var validationResult = _cancelValidator.ValidateRequest(id);
+
+            if (!validationResult.PassedValidation)
+            {
+                throw new ArgumentException(validationResult.Errors.First());
+            }
+
+            var booking = _context.Order.Where(x => x.Id == id).FirstOrDefault();
+
+            //if (booking == null)
+            //{
+            //    throw new ArgumentException("Booking Not Found");
+            //    //Raise Booking not found error
+            //}
+
+            booking.IsCancelled = true;
+            _context.Order.Update(booking);
+            _context.SaveChanges();
+        }
+
         public GetAllBookingResponse GetAllBookings(long patientId)
         {
             var orders = _context
@@ -64,7 +89,8 @@ namespace PDR.PatientBooking.Service.BookingServices
                     EndTime = x.EndTime,
                     PatientId = x.PatientId,
                     DoctorId = x.DoctorId,
-                    SurgeryType = (int)x.SurgeryType
+                    SurgeryType = (int)x.SurgeryType,
+                    IsCancelled = x.IsCancelled
                 })
                 .AsNoTracking()
                 .ToList();
@@ -74,5 +100,7 @@ namespace PDR.PatientBooking.Service.BookingServices
                 Orders = orders
             };
         }
+
+
     }
 }

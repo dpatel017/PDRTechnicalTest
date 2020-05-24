@@ -10,5 +10,6 @@ namespace PDR.PatientBooking.Service.BookingServices
     {
         void AddBooking(AddBookingRequest request);
         GetAllBookingResponse GetAllBookings(long patientId);
+        void CancelBooking(Guid id);
     }
 }

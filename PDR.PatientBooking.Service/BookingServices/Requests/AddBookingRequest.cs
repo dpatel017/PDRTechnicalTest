@@ -11,6 +11,7 @@ namespace PDR.PatientBooking.Service.BookingServices.Requests
         public DateTime EndTime { get; set; }
         public long PatientId { get; set; }
         public long DoctorId { get; set; }        
-        public int SurgeryType { get; set; }        
+        public int SurgeryType { get; set; }
+        public bool IsCancelled { get; set; }
     }
 }

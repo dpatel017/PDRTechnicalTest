@@ -13,13 +13,13 @@ using System.Text;
 namespace PDR.PatientBooking.Service.Tests.BookingServices.Validation
 {
     [TestFixture]
-    public class AddBookingRequestValidatorTests
+    public class CancelBookingRequestValidatorTests
     {
         private IFixture _fixture;
 
         private PatientBookingContext _context;
 
-        private AddBookingRequestValidator _addBookingRequestValidator;
+        private CancelBookingRequestValidator _cancelBookingRequestValidator;
 
         private AddBookingRequest _request;
 
@@ -39,7 +39,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices.Validation
             SetupMockDefaults();
 
             // Sut instantiation
-            _addBookingRequestValidator = new AddBookingRequestValidator(
+            _cancelBookingRequestValidator = new CancelBookingRequestValidator(
                 _context
             );
         }
@@ -117,8 +117,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices.Validation
                 StartTime = new DateTime(2021, 1, 12, 12, 15, 00),
                 EndTime = new DateTime(2021, 1, 12, 12, 30, 00),
                 DoctorId = 1,
-                PatientId = 100,
-                IsCancelled = false
+                PatientId = 100
             };
         }
 
@@ -141,43 +140,15 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices.Validation
             //arrange
             SeedData();
             var request = GetValidRequest();
-
+            
             //act
-            var res = _addBookingRequestValidator.ValidateRequest(request);
+            var res = _cancelBookingRequestValidator.ValidateRequest(request.Id);
 
             //assert
             res.PassedValidation.Should().BeTrue();
         }
 
-        [Test]
-        public void ValidateRequest_BookingDateInPast_ReturnsFailedValidationResult()
-        {
-            //arrange
-            var request = GetValidRequest();
-            request.StartTime = DateTime.UtcNow.AddDays(-1);
-
-            //act
-            var res = _addBookingRequestValidator.ValidateRequest(request);
-
-            //assert
-            res.PassedValidation.Should().BeFalse();
-            res.Errors.Should().Contain("An appointment date cannot be in past");
-        }
-
-        [Test]
-        public void ValidateRequest_DoctorBusyOnSelectedBookingDateTime_ReturnsFailedValidationResult()
-        {
-            //arrange
-            //var request = GetValidRequest();
-            SeedData();
-
-            //act
-            var res = _addBookingRequestValidator.ValidateRequest(_request);
-
-            //assert
-            res.PassedValidation.Should().BeFalse();
-            res.Errors.Should().Contain("Doctor is already busy for selected date & time");
-        }
+        
 
     }
 }
