@@ -16,6 +16,7 @@ namespace PDR.PatientBooking.Service.BookingServices.Responses
             public int SurgeryType { get; set; }
             public long PatientId { get; set; }
             public long DoctorId { get; set; }
+            public bool IsCancelled { get; set; }
         }
     }
 }

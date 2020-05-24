@@ -21,10 +21,12 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
     public class BookingServiceTests
     {
         private MockRepository _mockRepository;
+        private MockRepository _mockRepositoryCancel;
         private IFixture _fixture;
 
         private PatientBookingContext _context;
         private Mock<IAddBookingRequestValidator> _validator;
+        private Mock<ICancelBookingRequestValidator> _cancelvalidator;
 
         private BookingService _bookingService;
 
@@ -33,6 +35,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
         {
             // Boilerplate
             _mockRepository = new MockRepository(MockBehavior.Strict);
+            _mockRepositoryCancel = new MockRepository(MockBehavior.Strict);
             _fixture = new Fixture();
 
             //Prevent fixture from generating circular references
@@ -41,6 +44,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             // Mock setup
             _context = new PatientBookingContext(new DbContextOptionsBuilder<PatientBookingContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
             _validator = _mockRepository.Create<IAddBookingRequestValidator>();
+            _cancelvalidator = _mockRepositoryCancel.Create<ICancelBookingRequestValidator>();
 
             // Mock default
             SetupMockDefaults();
@@ -50,7 +54,8 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             // Sut instantiation
             _bookingService = new BookingService(
                 _context,
-                _validator.Object
+                _validator.Object,
+                _cancelvalidator.Object
             );
         }
 
@@ -135,6 +140,9 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             _validator.Setup(x => x.ValidateRequest(It.IsAny<AddBookingRequest>()))
                 .Returns(new PdrValidationResult(true));
 
+            _cancelvalidator.Setup(x => x.ValidateRequest(It.IsAny<Guid>()))
+                .Returns(new PdrValidationResult(true));
+
 
         }
 
@@ -153,6 +161,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
 
             return request;
         }
+
         [Test]
         public void AddBooking_ValidatesRequest()
         {
@@ -167,7 +176,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
         }
 
         [Test]
-        public void AddDoctor_ValidatorFails_ThrowsArgumentException()
+        public void AddBooking_ValidatorFails_ThrowsArgumentException()
         {
             //arrange
             var failedValidationResult = new PdrValidationResult(false, _fixture.Create<string>());
@@ -250,7 +259,8 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
                         EndTime = booking.EndTime,
                         PatientId = booking.PatientId,
                         DoctorId = booking.DoctorId,
-                        SurgeryType = (int)booking.SurgeryType
+                        SurgeryType = (int)booking.SurgeryType,
+                        IsCancelled = booking.IsCancelled
                     }
                 }
             };
@@ -262,6 +272,56 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             res.Should().BeEquivalentTo(expected);
         }
 
+
+        #region Cancel Booking
+        
+        [Test]
+        public void CancelBooking_ValidatesRequest()
+        {
+            //arrange
+            SeedBookingData();
+            var request = CreateBookingRequest();
+
+            //act
+            _bookingService.CancelBooking(request.Id);
+
+            //assert
+            _cancelvalidator.Verify(x => x.ValidateRequest(request.Id), Times.Once);
+        }
+
+
+        [Test]
+        public void CancelBooking_ValidatorFails_ThrowsArgumentException()
+        {
+            //arrange
+            var failedValidationResult = new PdrValidationResult(false, _fixture.Create<string>());
+
+            _cancelvalidator.Setup(x => x.ValidateRequest(It.IsAny<Guid>())).Returns(failedValidationResult);
+
+            //act
+            var exception = Assert.Throws<ArgumentException>(() => _bookingService.CancelBooking(new Guid()));
+
+            //assert
+            exception.Message.Should().Be(failedValidationResult.Errors.First());
+        }
+
+
+        [Test]
+        public void CancelBooking_CancelsBookingToContextWithGeneratedId()
+        {
+            //arrange
+            SeedBookingData();
+            var request = CreateBookingRequest();
+
+            var expected = true;
+
+            //act
+            _bookingService.CancelBooking(request.Id);
+            
+            //assert
+            _context.Order.Select(x => x.IsCancelled).Should().ContainEquivalentOf(expected);
+        }
+        #endregion
 
         [TearDown]
         public void TearDown()
